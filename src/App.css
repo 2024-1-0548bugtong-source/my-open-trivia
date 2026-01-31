@@ -1,0 +1,25 @@
+:root{--max-width:1400px}
+
+/* Small set of helpers kept for legacy layout pieces while migrating to Tailwind
+   Primary visual styling is driven by CSS variables in index.css and Tailwind classes. */
+
+html,body,#root{height:100%}
+body{margin:0}
+
+/* Container helper used in App.tsx */
+.app-container{max-width:var(--max-width);margin:2.5rem auto;padding:1.5rem}
+
+/* Card helper that uses theme tokens */
+.card{background:var(--card);color:var(--card-foreground);border-radius:calc(var(--radius,12px));padding:1.5rem;border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,0.45);transition:transform .18s ease}
+.card:hover{transform:translateY(-4px)}
+
+/* Gradients used by a few places in the app (kept lightweight) */
+.bg-linear-to-r{background:linear-gradient(90deg,var(--primary), rgba(20,184,166,0.06))}
+.bg-linear-to-br{background:linear-gradient(180deg,var(--background), rgba(36,48,74,0.6))}
+.bg-linear-to-t{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.00))}
+
+/* Focus utility for accessible outlines */
+:focus{outline:2px solid var(--primary);outline-offset:4px}
+
+/* Keep a few responsive helpers */
+@media (max-width:900px){.app-container{margin:1rem;padding:1rem}}
