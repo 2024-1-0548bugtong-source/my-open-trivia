@@ -1,9 +1,12 @@
+"use client";
+
 // src/pages/QuizPage.tsx
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Star, Loader, CheckCircle2, XCircle } from "lucide-react";
 import type { Preferences } from "../types";
+import { createQuizResult } from "../services/quizResults";
 
 interface Question {
   question: string;
@@ -14,14 +17,14 @@ interface Question {
 }
 
 interface QuizPageProps {
-  prefs: Preferences;
-  addFavorite: (question: string, correctAnswer: string, category: string, difficulty: string) => void;
+  prefs?: Preferences;
+  addFavorite?: (question: string, correctAnswer: string, category: string, difficulty: string) => void;
   addHistory?: (category: string, score: number) => void;
 }
 
 const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -30,12 +33,24 @@ const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [favoriteAdded, setFavoriteAdded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  const category = searchParams.get("category") || "";
-  const difficulty = searchParams.get("difficulty") || "";
-  const type = searchParams.get("type") || "";
+  const category = searchParams?.get("category") ?? "";
+  const difficulty = searchParams?.get("difficulty") ?? "";
+  const type = searchParams?.get("type") ?? "";
+
+  // Ensure component only fetches on client to prevent SSR/build errors
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    // Guard: Don't fetch until component is on client and prefs is available
+    if (!isClient || !prefs?.amount) {
+      setLoading(true);
+      return;
+    }
+
     const fetchQuestions = async () => {
       try {
         let url = `https://opentdb.com/api.php?amount=${prefs.amount}&category=${category}`;
@@ -53,9 +68,9 @@ const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
     };
 
     fetchQuestions();
-  }, [prefs.amount, category, difficulty, type]);
+  }, [isClient, prefs?.amount, category, difficulty, type]);
 
-  if (loading) {
+  if (!isClient || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center">
@@ -72,7 +87,7 @@ const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
         <div className="text-center">
           <p className="text-destructive font-semibold text-lg mb-4">Failed to load questions</p>
           <button
-            onClick={() => navigate("/categories")}
+            onClick={() => router.push("/categories")}
             className="px-6 py-3 rounded-lg font-semibold text-primary-foreground bg-primary hover:brightness-95 transition"
           >
             Back to Categories
@@ -99,10 +114,19 @@ const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
 
   const handleNext = () => {
     if (isLastQuestion) {
-      if (addHistory) addHistory(current.category, score);
-      navigate("/dashboard", {
-        state: { finalScore: score, totalQuestions: questions.length },
-      });
+      // Calculate final score: add 1 if current answer is correct, otherwise keep existing score
+      const finalScore = selectedAnswer === current.correct_answer ? score + 1 : score;
+      
+      // Save quiz result to Firestore with REAL computed values
+      // This creates a NEW document with addDoc (unique doc id each time)
+      createQuizResult({
+        score: finalScore,                    // REAL final score
+        totalQuestions: questions.length,     // REAL number of questions
+        nickname: "Guest",                     // Default; can be edited in leaderboard
+      }).catch((err) => console.error("Failed to save quiz result:", err));
+
+      if (addHistory) addHistory(current.category, finalScore);
+      router.push("/");
     } else {
       setCurrentIndex(currentIndex + 1);
       setSelectedAnswer(null);
@@ -112,8 +136,10 @@ const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
   };
 
   const handleAddFavorite = () => {
-    addFavorite(current.question, current.correct_answer, current.category, current.difficulty);
-    setFavoriteAdded(true);
+    if (addFavorite) {
+      addFavorite(current.question, current.correct_answer, current.category, current.difficulty);
+      setFavoriteAdded(true);
+    }
   };
 
   return (

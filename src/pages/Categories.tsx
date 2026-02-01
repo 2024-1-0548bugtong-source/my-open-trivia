@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -12,7 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ArrowLeft, Check, X, RefreshCw, AlertCircle, Play, Settings2, Star, Trophy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useLocation } from 'wouter';
+import { createQuizResult } from "@/services/quizResults";
+import { useUser } from "@/context/UserContext";
 
 interface Category {
   id: number;
@@ -34,6 +37,8 @@ type QuestionType = 'any' | 'multiple' | 'boolean';
 const DAILY_CHALLENGE_SECONDS = 90; // 1.5 minutes to answer the daily challenge
 
 export default function Categories() {
+  const user = useUser();
+  const nickname = user?.nickname;
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
@@ -50,13 +55,14 @@ export default function Categories() {
 
   // Quiz Progress State
   const [score, setScore] = useState(0);
+  const scoreRef = useRef(0); // Track current score to avoid stale closures
+  const hasSavedRef = useRef(false); // Prevent duplicate Firestore saves
   const [answeredCount, setAnsweredCount] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const { toast } = useToast();
-  const [] = useLocation();
 
   // Initialize favorites from local storage
   useEffect(() => {
@@ -141,10 +147,47 @@ export default function Categories() {
     if (quizFinished) return;
     setQuizFinished(true);
     setShowScoreModal(true);
-    if (selectedCategory) {
-      saveHistory(selectedCategory.name, score, questions.length);
+    
+    if (selectedCategory && questions.length > 0) {
+      // Use scoreRef to get the ACTUAL current score (not stale closure value)
+      const finalScore = scoreRef.current;
+      const totalQuestions = questions.length;
+      const categoryName = selectedCategory.name;
+      const currentNickname = nickname || "Guest";
+      
+      // Save to localStorage history
+      saveHistory(categoryName, finalScore, totalQuestions);
+      
+      // SINGLE SAVE STRATEGY: Only save to Firestore once per attempt
+      if (!hasSavedRef.current) {
+        hasSavedRef.current = true; // Mark as saved to prevent duplicates
+        
+        console.log("[SAVE] Saving quiz result to Firestore:", {
+          score: finalScore,
+          totalQuestions: totalQuestions,
+          nickname: currentNickname,
+          category: categoryName,
+          answeredCount: answeredCount,
+          scoreState: score,
+          scoreRef: scoreRef.current,
+          questionsLength: questions.length,
+          timestamp: new Date().toISOString()
+        });
+        
+        createQuizResult({
+          score: finalScore,
+          totalQuestions: totalQuestions,
+          nickname: currentNickname, // Use logged-in nickname from context
+          category: categoryName,     // Quiz category name
+        }).catch((err) => {
+          console.error("[ERROR] Failed to save quiz result to Firestore:", err);
+          hasSavedRef.current = false; // Reset on error to allow retry
+        });
+      } else {
+        console.warn("[SKIP] Quiz result already saved, preventing duplicate save");
+      }
     }
-  }, [quizFinished, selectedCategory, score, questions.length]);
+  }, [quizFinished, selectedCategory, questions.length, nickname, answeredCount, score]);
 
   useEffect(() => {
     if (quizFinished) return;
@@ -181,9 +224,13 @@ export default function Categories() {
   const handleStartQuiz = async () => {
     if (!selectedCategory) return;
     
+    console.log("[RESET] Starting new quiz, resetting all state");
+    
     setIsLoadingQuestions(true);
     setQuestions([]); 
     setScore(0);
+    scoreRef.current = 0; // Reset ref when starting new quiz
+    hasSavedRef.current = false; // Reset save flag for new attempt
     setAnsweredCount(0);
     setShowScoreModal(false);
     setQuizFinished(false);
@@ -228,20 +275,35 @@ export default function Categories() {
   };
 
   const handleAnswer = (isCorrect: boolean) => {
-    if (isCorrect) setScore(s => s + 1);
+    if (isCorrect) {
+      setScore(s => s + 1);
+      scoreRef.current += 1; // Keep ref in sync
+    }
     setAnsweredCount(c => c + 1);
   };
 
   const handleBackToList = () => {
+    console.log("[RESET] Returning to category list, resetting quiz state");
     setSelectedCategory(null);
     setView('list');
     setQuestions([]);
+    setScore(0);
+    scoreRef.current = 0;
+    hasSavedRef.current = false; // Reset save flag for next attempt
+    setAnsweredCount(0);
+    setShowScoreModal(false);
+    setQuizFinished(false);
     setDailyTimeLeft(null);
   };
 
   const handleBackToConfig = () => {
+    console.log("[RESET] Returning to config, resetting quiz state");
     setView('config');
     setQuestions([]);
+    setScore(0);
+    scoreRef.current = 0;
+    hasSavedRef.current = false; // Reset save flag for next attempt
+    setAnsweredCount(0);
     setShowScoreModal(false);
     setQuizFinished(false);
     setDailyTimeLeft(isDailyMode ? DAILY_CHALLENGE_SECONDS : null);

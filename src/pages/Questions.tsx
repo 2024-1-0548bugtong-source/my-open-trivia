@@ -1,5 +1,5 @@
-// src/pages/Questions.tsx — integrated with `wouter` routing
-import { useRoute } from 'wouter';
+"use client";
+
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import type { Question } from '@/types';
 import { htmlDecode } from '@/utils/htmlDecode';
 
-export default function Questions() {
-  const [, params] = useRoute('/questions/:id');
-  const id = params?.id;
+type QuestionsProps = {
+  categoryId?: string;
+};
+
+export default function Questions({ categoryId }: QuestionsProps) {
+  const id = categoryId;
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
 

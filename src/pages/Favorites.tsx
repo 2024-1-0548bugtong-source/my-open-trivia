@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
-import { useLocation } from "wouter";
+import { useRouter } from "next/navigation";
 
 interface TriviaQuestion { 
   category: string;
@@ -21,7 +23,7 @@ export default function Favorites() {
   const [favoriteCategories, setFavoriteCategories] = useState<number[]>([]);
   const [categoryMap, setCategoryMap] = useState<Record<number, string>>({});
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('trivia_favorites') || '[]');
@@ -59,7 +61,7 @@ export default function Favorites() {
 
   const openCategory = (catId: number) => {
     // navigate to categories page and open config for this category
-    setLocation(`/categories?cat=${catId}`);
+    router.push(`/categories?cat=${catId}`);
   };
 
   return (

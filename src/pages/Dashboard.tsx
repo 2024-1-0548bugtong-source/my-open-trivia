@@ -1,8 +1,11 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, BookOpen, Trophy, Clock, CalendarDays, Sparkles, Trash } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 
@@ -145,7 +148,7 @@ function DidYouKnow() {
     return () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
-  }, [autoPlay]);
+  }, [autoPlay, facts.length]);
 
   const next = () => {
     setIndex((i) => (i + 1) % facts.length);
@@ -227,14 +230,12 @@ const formatCountdown = (ms: number) => {
 };
 
 export default function Dashboard() {
-  const [history, setHistory] = useState<QuizHistory[]>([]);
+  const [history, setHistory] = useState<QuizHistory[]>(() => {
+    if (typeof window === 'undefined') return [];
+    return JSON.parse(localStorage.getItem('quiz_history') || '[]');
+  });
   const [timeLeftMs, setTimeLeftMs] = useState(getMsUntilMidnight());
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    const storedHistory = JSON.parse(localStorage.getItem('quiz_history') || '[]');
-    setHistory(storedHistory);
-  }, []);
+  const router = useRouter();
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -260,7 +261,7 @@ export default function Dashboard() {
     // Simulate picking a random category for the daily challenge
     // Ideally this would be seeded by the date so everyone gets the same one
     const randomCatId = 9; // General Knowledge
-    setLocation(`/categories?daily=true&cat=${randomCatId}`);
+    router.push(`/categories?daily=true&cat=${randomCatId}`);
   };
 
   const countdownDisplay = formatCountdown(timeLeftMs);
@@ -352,7 +353,7 @@ export default function Dashboard() {
                   <p className="text-sm">No quizzes taken yet.</p>
                 </div>
               ) : (
-                <div className="space-y-4 overflow-y-auto pr-2 max-h-[300px] md:max-h-full">
+                <div className="space-y-4 overflow-y-auto pr-2 max-h-75 md:max-h-full">
                   {history.map((record, i) => (
                     <div key={i} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
                       <div className="flex flex-col min-w-0">
@@ -388,7 +389,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="flex flex-col justify-between h-full gap-4">
               <p className="text-muted-foreground">
-                Today's challenge: <strong>General Knowledge</strong>. <br/>
+                Today&apos;s challenge: <strong>General Knowledge</strong>. <br/>
                 Beat the clock and earn a streak!
               </p>
               <div className="space-y-2">

@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
@@ -34,11 +36,17 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+    () => {
+      if (typeof window === "undefined") return defaultTheme;
+      return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
+    }
   );
   
   const [fontSize, setFontSize] = useState<FontSize>(
-    () => (localStorage.getItem(`${storageKey}-fontsize`) as FontSize) || defaultFontSize
+    () => {
+      if (typeof window === "undefined") return defaultFontSize;
+      return (localStorage.getItem(`${storageKey}-fontsize`) as FontSize) || defaultFontSize;
+    }
   );
 
   useEffect(() => {
