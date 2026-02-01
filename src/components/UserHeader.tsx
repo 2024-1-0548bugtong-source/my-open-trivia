@@ -1,3 +1,5 @@
+"use client";
+
 import { useUser } from '@/context/UserContext';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';

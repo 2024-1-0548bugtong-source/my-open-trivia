@@ -42,7 +42,6 @@
     "build",
     "dist",
     "server",
-    "src/main.tsx",
     "src/App.tsx",
     "**/*.test.ts"
   ]
