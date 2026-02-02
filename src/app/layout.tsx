@@ -1,6 +1,7 @@
 import "./globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/AppShell";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   title: "Open Trivia",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
