@@ -86,22 +86,15 @@ export default function Preferences() {
             </div>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label className="text-base">Default Difficulty</Label>
+                <Label className="text-base">Difficulty</Label>
                 <div className="text-sm text-muted-foreground">
-                  Set your preferred challenge level.
+                  Standardized to Medium for fair leaderboard scoring.
                 </div>
               </div>
-               <Select defaultValue="any">
-                <SelectTrigger className="w-45">
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any Difficulty</SelectItem>
-                  <SelectItem value="easy">Easy</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="hard">Hard</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Medium</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">(Standard)</span>
+              </div>
             </div>
           </CardContent>
         </Card>

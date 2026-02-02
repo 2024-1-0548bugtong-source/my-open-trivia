@@ -15,7 +15,8 @@ import { ArrowLeft, Check, X, RefreshCw, AlertCircle, Play, Settings2, Star, Tro
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { createQuizResult } from "@/services/quizResults";
-import { useUser } from "@/context/UserContext";
+import { useUser, resolveNickname } from "@/context/UserContext";
+import { auth } from "@/firebase";
 import { TOTAL_QUESTIONS, QUESTION_TYPE, DIFFICULTY } from "@/lib/quizConstants";
 
 interface Category {
@@ -188,11 +189,14 @@ export default function Categories() {
           timestamp: new Date().toISOString()
         });
         
+        const uid = auth.currentUser?.uid || undefined;
+        
         createQuizResult({
           score: finalScore,
           totalQuestions: TOTAL_QUESTIONS,
           nickname: currentNickname, // Use logged-in nickname from context
           category: categoryName,     // Quiz category name
+          uid: uid,                   // Firebase auth uid for filtering user's scores
         }).catch((err) => {
           console.error("[ERROR] Failed to save quiz result to Firestore:", err);
           hasSavedRef.current = false; // Reset on error to allow retry

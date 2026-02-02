@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "@/firebase";
 import type { QuizResult } from "../types/quizResult";
+import { resolveNickname } from "@/context/UserContext";
 
 const RESULTS_COLLECTION = "quizResults";
 
@@ -23,22 +24,43 @@ export async function createQuizResult(data: {
   totalQuestions: number;
   nickname?: string;
   category?: string;
+  uid?: string;
 }) {
   const percentage = (data.score / data.totalQuestions) * 100;
   
-  // Get displayName from Firebase Auth user (nickname only - never email for privacy)
+  // Get Firebase auth user
   const currentUser = auth.currentUser;
-  const displayName = currentUser?.displayName?.trim() || "Player";
+  const uid = data.uid || currentUser?.uid || null;
   
-  return await addDoc(collection(db, RESULTS_COLLECTION), {
-    uid: currentUser?.uid || null,                 // Firebase user ID for data association
-    score: data.score,                             // REAL computed score from quiz
-    totalQuestions: data.totalQuestions,           // REAL question count (fixed to 10 for leaderboard fairness)
-    percentage: parseFloat(percentage.toFixed(1)), // Percentage score for easy comparison
-    nickname: data.nickname || displayName,        // Use passed nickname or Firebase displayName
-    category: data.category?.trim() || "Uncategorized", // Quiz category name (fallback to "Uncategorized")
-    createdAt: serverTimestamp(),                  // Server timestamp for consistency
-  });
+  // Resolve nickname reliably: prefer passed nickname, fallback to context/localStorage, final fallback "Guest"
+  const nickname = data.nickname?.trim() || resolveNickname(data.nickname || null);
+  
+  try {
+    const result = await addDoc(collection(db, RESULTS_COLLECTION), {
+      uid: uid,                                      // Firebase user ID for filtering user's own scores
+      score: data.score,                             // REAL computed score from quiz
+      totalQuestions: data.totalQuestions,           // REAL question count (fixed to 10 for leaderboard fairness)
+      percentage: parseFloat(percentage.toFixed(1)), // Percentage score for easy comparison
+      nickname: nickname,                            // Nickname from context + fallback chain
+      category: data.category?.trim() || "Uncategorized", // Quiz category name
+      createdAt: serverTimestamp(),                  // Server timestamp for consistency
+    });
+    
+    console.log("[SAVE] Quiz result saved successfully:", {
+      docId: result.id,
+      uid: uid,
+      nickname: nickname,
+      score: data.score,
+      totalQuestions: data.totalQuestions,
+      category: data.category
+    });
+    
+    return result;
+  } catch (err) {
+    console.error("[ERROR] Failed to save quiz result to Firestore:", err);
+    console.error("[DEBUG] Attempted to save with uid:", uid, "nickname:", nickname);
+    throw err;
+  }
 }
 
 // READ: realtime leaderboard

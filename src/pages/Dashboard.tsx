@@ -171,30 +171,26 @@ function DidYouKnow() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="p-4 rounded-md bg-linear-to-r from-transparent to-primary/5"
+        className="p-4 rounded-lg bg-teal-50/50 border border-teal-100"
       >
-        <p className="text-sm text-muted-foreground italic mb-2">Tip</p>
-        <h4 className="text-base font-semibold mb-2" dangerouslySetInnerHTML={{ __html: current.text }} />
+        <p className="text-xs text-teal-600 font-medium mb-2">TRIVIA</p>
+        <h4 className="text-sm font-semibold text-slate-900 mb-2" dangerouslySetInnerHTML={{ __html: current.text }} />
         {revealed && (
-          <div className="mt-2 text-sm text-muted-foreground bg-muted/5 p-3 rounded">
-            <strong>{current.isTrue ? 'True' : 'False'}:</strong> {current.explanation}
+          <div className="mt-3 text-xs text-slate-600 bg-white p-3 rounded border border-teal-100">
+            <strong className="text-teal-700">{current.isTrue ? '✓ True' : '✗ False'}:</strong> {current.explanation}
           </div>
         )}
       </motion.div>
 
       <div className="flex items-center gap-2">
-        <Button size="sm" onClick={() => setRevealed((r) => !r)} variant="ghost">
-          <Sparkles className="w-4 h-4 mr-2" />
-          {revealed ? 'Hide Explanation' : 'Reveal'}
+        <Button size="sm" onClick={() => setRevealed((r) => !r)} variant="ghost" className="text-xs h-9">
+          {revealed ? 'Hide' : 'Reveal'}
         </Button>
-        <Button size="sm" onClick={next}>
+        <Button size="sm" onClick={next} className="text-xs h-9 bg-teal-600 hover:bg-teal-700 text-white">
           Next
         </Button>
-        <Button size="sm" variant="outline" onClick={random}>
+        <Button size="sm" variant="outline" onClick={random} className="text-xs h-9 border-slate-300">
           Random
-        </Button>
-        <Button size="sm" className="ml-auto" variant={autoPlay ? 'secondary' : 'ghost'} onClick={() => setAutoPlay((v) => !v)}>
-          {autoPlay ? 'Stop Auto' : 'Auto Play'}
         </Button>
       </div>
     </div>
@@ -283,92 +279,82 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8 text-center space-y-2"
-      >
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-primary bg-clip-text">
+    <div className="max-w-280 mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-slate-50 min-h-screen">
+      <div className="mb-8 text-center space-y-2">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-violet-600">
           Ready to Quiz?
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto">
           Test your knowledge across dozens of categories. Challenge yourself and learn something new every day.
         </p>
-      </motion.div>
+      </div>
 
-      <motion.div 
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      >
-        <motion.div variants={item} className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2">
-          <Card className="h-full bg-linear-to-br from-primary/5 to-primary/10 border-none shadow-lg relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
-            <CardContent className="p-8 flex flex-col justify-center h-full relative z-10">
-              <div className="mb-6 inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground shadow-xl">
-                <Play className="w-8 h-8 fill-current" />
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column: Start Game + Recent History */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Start a New Game Card */}
+          <Card className="bg-linear-to-br from-violet-100/70 via-violet-50 to-white border-violet-200 shadow-sm hover:shadow-md relative overflow-hidden group transition-shadow rounded-2xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:bg-violet-500/20 transition-all duration-500" />
+            <CardContent className="p-6 md:p-8 relative z-10">
+              <div className="mb-6 inline-flex items-center justify-center w-14 h-14 rounded-xl bg-violet-600 text-white shadow-lg">
+                <Play className="w-7 h-7 fill-current" />
               </div>
-              <h2 className="text-3xl font-bold mb-4">Start a New Game</h2>
-              <p className="text-lg text-muted-foreground mb-8 max-w-md">
+              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900">Start a New Game</h2>
+              <p className="text-base text-slate-600 mb-6 max-w-md">
                 Dive into our vast collection of trivia questions. Choose a category or go random!
               </p>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-3">
                 <Link href="/categories">
-                  <Button size="lg" className="text-lg px-8 py-6 shadow-primary/25 shadow-lg hover:shadow-primary/40 transition-all">
+                  <Button size="lg" className="h-11 px-6 bg-violet-600 hover:bg-violet-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2">
                     Browse Categories
                   </Button>
                 </Link>
                 <Link href="/favorites">
-                  <Button variant="outline" size="lg" className="text-lg px-8 py-6 bg-background/50 backdrop-blur-sm hover:bg-background/80">
+                  <Button variant="outline" size="lg" className="h-11 px-6 bg-white hover:bg-slate-50 border-slate-300 rounded-xl focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2">
                     View Favorites
                   </Button>
                 </Link>
               </div>
             </CardContent>
           </Card>
-        </motion.div>
 
-        <motion.div variants={item} className="row-span-2">
-          <Card className="h-full flex flex-col">
-            <CardHeader className="pb-2 flex items-start justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-primary" />
+          {/* Recent History Card */}
+          <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Clock className="w-5 h-5 text-violet-600" />
                 Recent History
               </CardTitle>
               {history.length > 0 && (
-                <div>
-                  <Button size="sm" variant="ghost" onClick={clearAllHistory}>
-                    <Trash className="w-4 h-4 mr-2 text-destructive" />
-                    Clear All
-                  </Button>
-                </div>
+                <Button size="sm" variant="ghost" onClick={clearAllHistory} className="h-9 text-xs hover:bg-slate-100">
+                  <Trash className="w-4 h-4 mr-1.5 text-red-500" />
+                  Clear All
+                </Button>
               )}
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden flex flex-col">
+            <CardContent className="pt-0">
               {history.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground p-4">
-                  <CalendarDays className="w-12 h-12 mb-2 opacity-20" />
+                <div className="flex flex-col items-center justify-center text-center py-12 text-slate-400">
+                  <CalendarDays className="w-12 h-12 mb-3 opacity-20" />
                   <p className="text-sm">No quizzes taken yet.</p>
                 </div>
               ) : (
-                <div className="space-y-4 overflow-y-auto pr-2 max-h-75 md:max-h-full">
+                <div className="space-y-0 divide-y divide-slate-100">
                   {history.map((record, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-medium truncate">{record.category}</span>
-                        <span className="text-xs text-muted-foreground">
+                    <div key={i} className="flex items-center justify-between py-3 hover:bg-slate-50 transition-colors -mx-2 px-2 rounded-lg">
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="font-medium text-sm text-slate-900 truncate">{record.category}</span>
+                        <span className="text-xs text-slate-500">
                           {format(new Date(record.date), 'MMM d, h:mm a')}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md">
-                          <span className="font-bold text-primary">{record.score}</span>
-                          <span className="text-muted-foreground text-xs">/{record.total}</span>
+                      <div className="flex items-center gap-2 ml-3">
+                        <div className="flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-full">
+                          <span className="font-bold text-sm text-violet-600">{record.score}</span>
+                          <span className="text-slate-500 text-xs">/{record.total}</span>
                         </div>
-                        <Button size="sm" variant="ghost" onClick={() => deleteHistoryEntry(i)}>
-                          <Trash className="w-4 h-4 text-muted-foreground" />
+                        <Button size="sm" variant="ghost" onClick={() => deleteHistoryEntry(i)} className="h-8 w-8 p-0 hover:bg-red-50">
+                          <Trash className="w-4 h-4 text-slate-400 hover:text-red-500" />
                         </Button>
                       </div>
                     </div>
@@ -377,56 +363,60 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div variants={item}>
-          <Card className="h-full hover:shadow-md transition-shadow border-l-4 border-l-chart-4">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-chart-4" />
+        {/* Right Column: Daily Challenge + Did You Know */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          {/* Daily Challenge Card */}
+          <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow rounded-2xl border-l-4 border-l-amber-400">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Trophy className="w-5 h-5 text-amber-500" />
                 Daily Challenge
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col justify-between h-full gap-4">
-              <p className="text-muted-foreground">
-                Today&apos;s challenge: <strong>General Knowledge</strong>. <br/>
-                Beat the clock and earn a streak!
+            <CardContent className="space-y-4">
+              <p className="text-sm text-slate-600">
+                Today&apos;s challenge: <strong className="text-slate-900">General Knowledge</strong>
+                <br />
+                <span className="text-xs">Beat the clock and earn a streak!</span>
               </p>
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Resets in</span>
-                  <span className="font-mono text-base text-primary">{countdownDisplay}</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-500">Resets in</span>
+                  <span className="bg-slate-100 text-slate-700 rounded-full px-2.5 py-1 text-xs font-mono font-medium">{countdownDisplay}</span>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-chart-4 transition-all duration-700"
+                    className="h-full bg-amber-500 transition-all duration-700 rounded-full"
                     style={{ width: `${(progressRatio * 100).toFixed(2)}%` }}
                   />
                 </div>
               </div>
-              <Button variant="secondary" className="w-full group" onClick={handleDailyChallenge}>
-                Play Daily 
-                <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+              <Button 
+                className="w-full h-10 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-sm hover:shadow-md transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2" 
+                onClick={handleDailyChallenge}
+              >
+                Play Now
+                <span className="ml-2">→</span>
               </Button>
             </CardContent>
           </Card>
-        </motion.div>
 
-        <motion.div variants={item}>
-            <Card className="h-full hover:shadow-md transition-shadow border-l-4 border-l-chart-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-chart-2" />
-                  Did You Know?
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DidYouKnow />
-              </CardContent>
-            </Card>
-        </motion.div>
-
-      </motion.div>
+          {/* Did You Know Card */}
+          <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow rounded-2xl border-l-4 border-l-teal-400">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BookOpen className="w-5 h-5 text-teal-500" />
+                Did You Know?
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DidYouKnow />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -58,6 +58,26 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
+// Helper function to reliably resolve nickname with fallbacks
+// Avoids race conditions when context hasn't hydrated yet
+export const resolveNickname = (contextNickname: string | null): string => {
+  // 1. Prefer UserContext nickname (React state)
+  if (contextNickname?.trim()) {
+    return contextNickname.trim();
+  }
+
+  // 2. Fallback to localStorage
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem('my-open-trivia.nickname');
+    if (stored?.trim()) {
+      return stored.trim();
+    }
+  }
+
+  // 3. Final fallback
+  return "Guest";
+};
+
 // Custom hook for using UserContext
 // Returns null if used outside of UserProvider (for SSR safety)
 // eslint-disable-next-line react-refresh/only-export-components

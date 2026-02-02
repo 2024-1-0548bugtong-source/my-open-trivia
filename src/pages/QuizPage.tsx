@@ -7,6 +7,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Star, Loader, CheckCircle2, XCircle } from "lucide-react";
 import type { Preferences } from "../types";
 import { createQuizResult } from "../services/quizResults";
+import { LEADERBOARD_QUIZ_CONFIG } from "../lib/quizConstants";
+import { useUser, resolveNickname } from "@/context/UserContext";
+import { auth } from "@/firebase";
 
 interface Question {
   question: string;
@@ -25,6 +28,7 @@ interface QuizPageProps {
 const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const user = useUser();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -36,8 +40,8 @@ const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
   const [isClient, setIsClient] = useState(false);
 
   const category = searchParams?.get("category") ?? "";
-  const difficulty = searchParams?.get("difficulty") ?? "";
   const type = searchParams?.get("type") ?? "";
+  const difficulty = LEADERBOARD_QUIZ_CONFIG.DIFFICULTY;
 
   // Ensure component only fetches on client to prevent SSR/build errors
   useEffect(() => {
@@ -54,7 +58,7 @@ const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
     const fetchQuestions = async () => {
       try {
         let url = `https://opentdb.com/api.php?amount=${prefs.amount}&category=${category}`;
-        if (difficulty) url += `&difficulty=${difficulty}`;
+        url += `&difficulty=${difficulty}`;
         if (type) url += `&type=${type}`;
 
         const res = await axios.get(url);
@@ -117,13 +121,20 @@ const QuizPage = ({ prefs, addFavorite, addHistory }: QuizPageProps) => {
       // Calculate final score: add 1 if current answer is correct, otherwise keep existing score
       const finalScore = selectedAnswer === current.correct_answer ? score + 1 : score;
       
+      // Resolve nickname: prefer UserContext, fallback to localStorage, final fallback "Guest"
+      const nickname = resolveNickname(user?.nickname || null);
+      
+      // Get uid from Firebase auth
+      const uid = auth.currentUser?.uid || undefined;
+      
       // Save quiz result to Firestore with REAL computed values
       // This creates a NEW document with addDoc (unique doc id each time)
       createQuizResult({
         score: finalScore,                    // REAL final score
         totalQuestions: questions.length,     // REAL number of questions
-        nickname: "Guest",                     // Default; can be edited in leaderboard
-      }).catch((err) => console.error("Failed to save quiz result:", err));
+        nickname: nickname,                   // Nickname from context + fallbacks
+        uid: uid,                             // Firebase auth uid for filtering user's scores
+      }).catch((err) => console.error("[ERROR] Failed to save quiz result:", err));
 
       if (addHistory) addHistory(current.category, finalScore);
       router.push("/");

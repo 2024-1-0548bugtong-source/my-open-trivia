@@ -13,18 +13,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Loader, Trophy, Play } from "lucide-react";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/firebase";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { db, auth } from "@/firebase";
 import { useUser } from "@/context/UserContext";
 import type { QuizResult } from "@/types/quizResult";
-import { format } from "date-fns";
+import { formatDate } from "@/utils/formatDate";
 import { TOTAL_QUESTIONS } from "@/lib/quizConstants";
 import Link from "next/link";
 
 export default function MyScores() {
   const user = useUser();
-  const nickname = user?.nickname || "Guest";
-
   const [scores, setScores] = useState<QuizResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [bestScore, setBestScore] = useState<QuizResult | null>(null);
@@ -32,8 +30,13 @@ export default function MyScores() {
 
   useEffect(() => {
     const fetchUserScores = async () => {
-      if (!nickname || nickname === "Guest") {
+      const currentUser = auth.currentUser;
+
+      // Can't query without uid (auth required)
+      if (!currentUser?.uid) {
+        console.log("[MyScores] No authenticated user, skipping fetch");
         setLoading(false);
+        setError("Please log in to view your scores.");
         return;
       }
 
@@ -41,8 +44,12 @@ export default function MyScores() {
         setLoading(true);
         setError(null);
 
-        // Query Firestore for results matching the user's nickname
-        const q = query(collection(db, "quizResults"), where("nickname", "==", nickname));
+        // Query Firestore for results matching the user's uid, ordered by createdAt descending
+        const q = query(
+          collection(db, "quizResults"),
+          where("uid", "==", currentUser.uid),
+          orderBy("createdAt", "desc")
+        );
         const querySnapshot = await getDocs(q);
 
         const results: QuizResult[] = querySnapshot.docs.map((doc) => ({
@@ -50,17 +57,19 @@ export default function MyScores() {
           ...doc.data(),
         } as QuizResult));
 
-        // Sort by score descending
-        results.sort((a, b) => b.score - a.score);
+        console.log("[MyScores] Fetched", results.length, "results for uid:", currentUser.uid);
 
-        setScores(results);
+        // Sort by score descending for best score display
+        const sortedByScore = [...results].sort((a, b) => b.score - a.score);
+
+        setScores(results); // Keep chronological order for the table
 
         // Find best score
-        if (results.length > 0) {
-          setBestScore(results[0]);
+        if (sortedByScore.length > 0) {
+          setBestScore(sortedByScore[0]);
         }
       } catch (err) {
-        console.error("Error fetching user scores:", err);
+        console.error("[MyScores] Error fetching user scores:", err);
         setError("Failed to load your scores. Please try again.");
       } finally {
         setLoading(false);
@@ -68,7 +77,7 @@ export default function MyScores() {
     };
 
     fetchUserScores();
-  }, [nickname]);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -140,9 +149,6 @@ export default function MyScores() {
                   {scores.map((result) => {
                     const percentage = result.percentage ?? ((result.score / result.totalQuestions) * 100).toFixed(1);
                     const percentageValue = typeof percentage === 'number' ? percentage : parseFloat(percentage);
-                    const createdAt = result.createdAt
-                      ? new Date(result.createdAt as any).toLocaleDateString()
-                      : "Unknown";
 
                     return (
                       <TableRow key={result.id}>
@@ -166,7 +172,7 @@ export default function MyScores() {
                           </span>
                         </TableCell>
                         <TableCell className="text-right text-sm text-muted-foreground">
-                          {createdAt}
+                          {formatDate(result.createdAt)}
                         </TableCell>
                       </TableRow>
                     );
