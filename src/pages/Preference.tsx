@@ -10,22 +10,24 @@ export default function Preferences() {
   const { theme, setTheme, fontSize, setFontSize } = useTheme();
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="mb-8 space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-          <Settings className="w-8 h-8" />
+    <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
+      <div className="mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3 flex items-center gap-3">
+          <Settings size={32} strokeWidth={2} />
           Preferences
         </h1>
-        <p className="text-muted-foreground">Manage your app settings and defaults.</p>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          Manage your app settings and defaults.
+        </p>
       </div>
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>Customize how the app looks on your device.</CardDescription>
+        <Card className="shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold">Appearance</CardTitle>
+            <CardDescription className="text-sm">Customize how the app looks on your device.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 pt-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="text-base">Dark Mode</Label>
@@ -35,7 +37,7 @@ export default function Preferences() {
               </div>
               <div className="flex items-center gap-2">
                  <Select value={theme} onValueChange={(v: any) => setTheme(v)}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-35">
                     <SelectValue placeholder="Select theme" />
                   </SelectTrigger>
                   <SelectContent>
@@ -54,7 +56,7 @@ export default function Preferences() {
                 </div>
               </div>
               <Select value={fontSize} onValueChange={(v: any) => setFontSize(v)}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-45">
                   <SelectValue placeholder="Select size" />
                 </SelectTrigger>
                 <SelectContent>
@@ -67,12 +69,12 @@ export default function Preferences() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Gameplay</CardTitle>
-            <CardDescription>Configure default settings for your quizzes.</CardDescription>
+        <Card className="shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold">Gameplay</CardTitle>
+            <CardDescription className="text-sm">Configure default settings for your quizzes.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 pt-6">
              <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="text-base">Sound Effects</Label>
@@ -90,7 +92,7 @@ export default function Preferences() {
                 </div>
               </div>
                <Select defaultValue="any">
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-45">
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>
                 <SelectContent>

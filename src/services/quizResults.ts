@@ -10,7 +10,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
-import { db } from "@/firebase";
+import { db, auth } from "@/firebase";
 import type { QuizResult } from "../types/quizResult";
 
 const RESULTS_COLLECTION = "quizResults";
@@ -24,12 +24,20 @@ export async function createQuizResult(data: {
   nickname?: string;
   category?: string;
 }) {
+  const percentage = (data.score / data.totalQuestions) * 100;
+  
+  // Get displayName from Firebase Auth user (nickname only - never email for privacy)
+  const currentUser = auth.currentUser;
+  const displayName = currentUser?.displayName?.trim() || "Player";
+  
   return await addDoc(collection(db, RESULTS_COLLECTION), {
-    score: data.score,                         // REAL computed score from quiz
-    totalQuestions: data.totalQuestions,       // REAL question count
-    nickname: data.nickname?.trim() || "Guest", // User nickname or default
-    category: data.category || "Unknown",      // Quiz category name
-    createdAt: serverTimestamp(),               // Server timestamp for consistency
+    uid: currentUser?.uid || null,                 // Firebase user ID for data association
+    score: data.score,                             // REAL computed score from quiz
+    totalQuestions: data.totalQuestions,           // REAL question count (fixed to 10 for leaderboard fairness)
+    percentage: parseFloat(percentage.toFixed(1)), // Percentage score for easy comparison
+    nickname: data.nickname || displayName,        // Use passed nickname or Firebase displayName
+    category: data.category?.trim() || "Uncategorized", // Quiz category name (fallback to "Uncategorized")
+    createdAt: serverTimestamp(),                  // Server timestamp for consistency
   });
 }
 

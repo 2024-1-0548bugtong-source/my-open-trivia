@@ -11,11 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Check, X, RefreshCw, AlertCircle, Play, Settings2, Star, Trophy } from 'lucide-react';
+import { ArrowLeft, Check, X, RefreshCw, AlertCircle, Play, Settings2, Star, Trophy, Shield } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { createQuizResult } from "@/services/quizResults";
 import { useUser } from "@/context/UserContext";
+import { TOTAL_QUESTIONS, QUESTION_TYPE, DIFFICULTY } from "@/lib/quizConstants";
 
 interface Category {
   id: number;
@@ -47,10 +48,10 @@ export default function Categories() {
   const [dailyTimeLeft, setDailyTimeLeft] = useState<number | null>(null);
   const [quizFinished, setQuizFinished] = useState(false);
   
-  // Quiz Configuration State
-  const [difficulty, setDifficulty] = useState<Difficulty>('any');
-  const [questionType, setQuestionType] = useState<QuestionType>('any');
-  const [amount, setAmount] = useState<number>(10);
+  // Quiz Configuration (standardized for leaderboard fairness)
+  const [difficulty, setDifficulty] = useState<Difficulty>(DIFFICULTY);
+  const [questionType, setQuestionType] = useState<QuestionType>(QUESTION_TYPE);
+  const [amount, setAmount] = useState<number>(TOTAL_QUESTIONS);
   const [view, setView] = useState<'list' | 'config' | 'quiz'>('list');
 
   // Quiz Progress State
@@ -162,21 +163,34 @@ export default function Categories() {
       if (!hasSavedRef.current) {
         hasSavedRef.current = true; // Mark as saved to prevent duplicates
         
+        // FAIRNESS CHECK: Only save if question count matches standardized rules
+        if (totalQuestions !== TOTAL_QUESTIONS) {
+          console.warn(
+            `[FAIRNESS] Quiz has ${totalQuestions} questions but leaderboard requires ${TOTAL_QUESTIONS}. ` +
+            `Not saving to leaderboard. This can happen if the API returns fewer questions than requested.`
+          );
+          toast({
+            title: "Quiz Complete",
+            description: `${totalQuestions} questions received (expected ${TOTAL_QUESTIONS}). Not saved to leaderboard due to fairness rules. Try again!`,
+            variant: "default"
+          });
+          return;
+        }
+        
         console.log("[SAVE] Saving quiz result to Firestore:", {
           score: finalScore,
-          totalQuestions: totalQuestions,
+          totalQuestions: TOTAL_QUESTIONS,
           nickname: currentNickname,
           category: categoryName,
-          answeredCount: answeredCount,
-          scoreState: score,
-          scoreRef: scoreRef.current,
-          questionsLength: questions.length,
+          difficulty: DIFFICULTY,
+          type: QUESTION_TYPE,
+          percentage: ((finalScore / TOTAL_QUESTIONS) * 100).toFixed(1),
           timestamp: new Date().toISOString()
         });
         
         createQuizResult({
           score: finalScore,
-          totalQuestions: totalQuestions,
+          totalQuestions: TOTAL_QUESTIONS,
           nickname: currentNickname, // Use logged-in nickname from context
           category: categoryName,     // Quiz category name
         }).catch((err) => {
@@ -237,15 +251,11 @@ export default function Categories() {
     setDailyTimeLeft(isDailyMode ? DAILY_CHALLENGE_SECONDS : null);
 
     try {
-      let url = `https://opentdb.com/api.php?amount=${amount}&category=${selectedCategory.id}`;
+      let url = `https://opentdb.com/api.php?amount=${TOTAL_QUESTIONS}&category=${selectedCategory.id}`;
       
-      if (difficulty !== 'any') {
-        url += `&difficulty=${difficulty}`;
-      }
-      
-      if (questionType !== 'any') {
-        url += `&type=${questionType}`;
-      }
+      // Always use standardized difficulty and type for leaderboard fairness
+      url += `&difficulty=${DIFFICULTY}`;
+      url += `&type=${QUESTION_TYPE}`;
 
       const response = await axios.get(url);
       
@@ -412,52 +422,15 @@ export default function Categories() {
               </CardHeader>
               <CardContent className="space-y-6 pt-6">
                 
-                <div className="space-y-3">
-                  <Label className="text-base font-medium flex items-center gap-2">
-                    <Settings2 className="w-4 h-4" /> Difficulty
-                  </Label>
-                  <Select value={difficulty} onValueChange={(v: Difficulty) => setDifficulty(v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select difficulty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any Difficulty</SelectItem>
-                      <SelectItem value="easy">Easy</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="hard">Hard</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-base font-medium flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" /> Question Type
-                  </Label>
-                  <Select value={questionType} onValueChange={(v: QuestionType) => setQuestionType(v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any Type</SelectItem>
-                      <SelectItem value="multiple">Multiple Choice</SelectItem>
-                      <SelectItem value="boolean">True / False</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <Label className="text-base font-medium">Number of Questions</Label>
-                    <span className="text-sm font-bold bg-primary/10 text-primary px-2 py-0.5 rounded">{amount}</span>
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm">Leaderboard Rules</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      All leaderboard attempts use standardized settings:<br/>
+                      <strong>{TOTAL_QUESTIONS} questions</strong> • <strong>Multiple Choice</strong> • <strong>Medium difficulty</strong>
+                    </p>
                   </div>
-                  <Slider
-                    value={[amount]}
-                    onValueChange={(val) => setAmount(val[0])}
-                    max={50}
-                    min={1}
-                    step={1}
-                    className="py-4"
-                  />
                 </div>
 
               </CardContent>

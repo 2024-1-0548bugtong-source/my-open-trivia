@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, Trash2, Trophy } from "lucide-react";
+import { Pencil, Trash2, Trophy, Shield, TrendingUp } from "lucide-react";
 import { listenLeaderboard, updateQuizResult, deleteQuizResult } from "../services/quizResults";
 import type { QuizResult } from "../types/quizResult";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,8 +24,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { TOTAL_QUESTIONS, QUESTION_TYPE, DIFFICULTY } from "@/lib/quizConstants";
+import Link from "next/link";
 
-export default function Leaderboard() {
+export default function Leaderboard({ compact = false }: { compact?: boolean }) {
   const [results, setResults] = useState<QuizResult[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNickname, setEditNickname] = useState("");
@@ -33,7 +35,7 @@ export default function Leaderboard() {
 
   useEffect(() => {
     const unsubscribe = listenLeaderboard(
-      50,
+      compact ? 10 : 50,  // Show top 10 in compact mode, top 50 in full
       (data) => {
         setResults(data as QuizResult[]);
       },
@@ -41,7 +43,7 @@ export default function Leaderboard() {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [compact]);
 
   const handleEdit = (result: QuizResult) => {
     setEditingId(result.id);
@@ -85,22 +87,53 @@ export default function Leaderboard() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <Card>
-        <CardHeader>
+    <div className={compact ? "" : "container mx-auto p-6 space-y-6"}>
+      <Card className={`shadow-sm ${compact ? "h-full" : ""}`}>
+        <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
-            <Trophy className="h-8 w-8 text-yellow-500" />
-            <div>
-              <CardTitle className="text-3xl">Leaderboard</CardTitle>
-              <CardDescription>Top quiz results from all players</CardDescription>
+            <Trophy 
+              className="text-yellow-500" 
+              size={compact ? 24 : 32} 
+              strokeWidth={2}
+            />
+            <div className="flex-1">
+              <CardTitle className={compact ? "text-xl" : "text-3xl"}>
+                {compact ? "Top Players" : "Leaderboard"}
+              </CardTitle>
+              {!compact && (
+                <CardDescription className="mt-1">Top quiz results from all players</CardDescription>
+              )}
             </div>
           </div>
+          
+          {!compact && (
+            <div className="mt-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-start gap-3">
+              <Shield className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" size={16} strokeWidth={2} />
+              <div className="space-y-0.5 text-xs text-blue-700 dark:text-blue-300">
+                <p className="font-semibold">Standardized Rules</p>
+                <p>{TOTAL_QUESTIONS} Questions • {QUESTION_TYPE === 'multiple' ? 'Multiple Choice' : 'True/False'} • Medium Difficulty</p>
+              </div>
+            </div>
+          )}
         </CardHeader>
-        <CardContent>
+        <CardContent className={compact ? "pb-6" : ""}>
           {results.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              No quiz results yet. Complete a quiz to see your score here!
-            </p>
+            <div className="text-center py-16 px-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                <TrendingUp className="text-muted-foreground/50" size={32} strokeWidth={1.5} />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No leaderboard data yet</h3>
+              <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+                Complete a quiz to appear here and compete with others!
+              </p>
+              {!compact && (
+                <Button asChild size="lg">
+                  <Link href="/categories">
+                    Start Your First Quiz
+                  </Link>
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -110,14 +143,14 @@ export default function Leaderboard() {
                     <TableHead>Player</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead className="text-center">Score</TableHead>
-                    <TableHead className="text-center">Total</TableHead>
-                    <TableHead className="text-center">Percentage</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-center">%</TableHead>
+                    {!compact && <TableHead className="text-right">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {results.map((result, index) => {
-                    const percentage = ((result.score / result.totalQuestions) * 100).toFixed(1);
+                    const percentage = result.percentage ?? ((result.score / result.totalQuestions) * 100).toFixed(1);
+                    const percentageValue = typeof percentage === 'number' ? percentage : parseFloat(percentage);
                     return (
                       <TableRow key={result.id}>
                         <TableCell className="font-bold">
@@ -128,43 +161,42 @@ export default function Leaderboard() {
                         </TableCell>
                         <TableCell className="font-medium">{result.nickname}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {result.category || "Unknown"}
+                          {result.category ?? "Uncategorized"}
                         </TableCell>
-                        <TableCell className="text-center font-semibold">{result.score}</TableCell>
-                        <TableCell className="text-center text-muted-foreground">
-                          {result.totalQuestions}
-                        </TableCell>
+                        <TableCell className="text-center font-semibold">{result.score}/{TOTAL_QUESTIONS}</TableCell>
                         <TableCell className="text-center">
                           <span
                             className={`font-semibold ${
-                              parseFloat(percentage) >= 80
+                              percentageValue >= 80
                                 ? "text-green-600"
-                                : parseFloat(percentage) >= 60
+                                : percentageValue >= 60
                                 ? "text-yellow-600"
                                 : "text-red-600"
                             }`}
                           >
-                            {percentage}%
+                            {percentageValue.toFixed(1)}%
                           </span>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEdit(result)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDelete(result.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {!compact && (
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(result)}
+                              >
+                                <Pencil size={16} strokeWidth={2} />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(result.id)}
+                              >
+                                <Trash2 size={16} strokeWidth={2} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}

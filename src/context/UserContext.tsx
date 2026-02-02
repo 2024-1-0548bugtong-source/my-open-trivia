@@ -60,6 +60,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 // Custom hook for using UserContext
 // Returns null if used outside of UserProvider (for SSR safety)
+// eslint-disable-next-line react-refresh/only-export-components
 export const useUser = (): UserContextType | null => {
   const context = useContext(UserContext);
   return context || null;

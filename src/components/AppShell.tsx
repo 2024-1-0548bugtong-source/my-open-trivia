@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, List, Settings, Star, Trophy } from "lucide-react";
+import { Home, List, Star, Trophy } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
@@ -20,8 +20,14 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
-import FirestoreTest from "@/components/FirestoreTest";
 import UserHeader from "@/components/UserHeader";
+import dynamic from "next/dynamic";
+
+// Dynamically import AuthDevPanel to avoid SSR issues
+const AuthDevPanel = dynamic(() => import("@/components/dev/AuthDevPanel"), {
+  ssr: false,
+});
+
 
 const ApplicationSidebarGroup = () => {
   const pathname = usePathname();
@@ -51,47 +57,21 @@ const ApplicationSidebarGroup = () => {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Application</SidebarGroupLabel>
+      <SidebarGroupLabel className="text-xs font-semibold text-foreground/70">
+        Application
+      </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild isActive={pathname === item.url}>
-                <Link href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  );
-};
-
-const SettingsSidebarGroup = () => {
-  const pathname = usePathname();
-
-  const menuItems = [
-    {
-      title: "Preferences",
-      icon: Settings,
-      url: "/preferences",
-    },
-  ];
-
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Settings ⚙️</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild isActive={pathname === item.url}>
-                <Link href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
+                <Link href={item.url} className="group">
+                  <item.icon 
+                    className="transition-colors" 
+                    size={20} 
+                    strokeWidth={2}
+                  />
+                  <span className="font-medium">{item.title}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -103,29 +83,46 @@ const SettingsSidebarGroup = () => {
 };
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  
+  // Auth pages that should not show sidebar
+  const authPages = ['/login', '/signup', '/reset-password'];
+  const isAuthPage = authPages.includes(pathname ?? '');
+
+  // If on auth page, show simplified layout without sidebar
+  if (isAuthPage) {
+    return (
+      <>
+        <main className="min-h-screen bg-background">
+          {children}
+        </main>
+        <Toaster />
+        {/* DEV-ONLY: Auth testing panel (only visible in development) */}
+        <AuthDevPanel />
+      </>
+    );
+  }
+
+  // Normal layout with sidebar for authenticated app pages
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
-        <Sidebar className="border-r border-border/40">
+        <Sidebar className="border-r border-border/40 bg-sidebar">
           <SidebarHeader>
             <div className="p-4 pb-2">
-              <h1 className="text-2xl font-display font-extrabold tracking-tight text-primary">
+              <h1 className="text-2xl font-display font-extrabold tracking-tight text-foreground">
                 Open Trivia
               </h1>
-              <p className="text-muted-foreground text-sm font-medium">
-                Developed by <em>G5</em>
-              </p>
             </div>
             <Separator className="opacity-50" />
           </SidebarHeader>
           <SidebarContent>
             <ApplicationSidebarGroup />
-            <SettingsSidebarGroup />
           </SidebarContent>
-          <SidebarFooter className="p-4">
-            <p className="text-xs text-muted-foreground/60 text-center">
-              WMAD-302 Group 5 <br />
-              &copy; 2025
+          <SidebarFooter className="p-4 border-t border-border/30">
+            <p className="text-xs text-muted-foreground text-center leading-relaxed">
+              © 2026 Open Trivia<br />
+              Built with Next.js + Firebase
             </p>
           </SidebarFooter>
         </Sidebar>
@@ -139,12 +136,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </header>
 
           <main className="flex-1 overflow-y-auto bg-muted/10">
-            <FirestoreTest />
             {children}
           </main>
         </SidebarInset>
       </div>
       <Toaster />
+      {/* DEV-ONLY: Auth testing panel (only visible in development) */}
+      <AuthDevPanel />
     </SidebarProvider>
   );
 }

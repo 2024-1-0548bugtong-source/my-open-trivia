@@ -4,6 +4,7 @@ export interface QuizResult {
   id: string;
   score: number;
   totalQuestions: number;
+  percentage?: number; // Optional for backward compatibility
   nickname: string;
   category?: string;
   createdAt: Timestamp;
