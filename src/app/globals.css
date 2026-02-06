@@ -1,0 +1,315 @@
+@import "tailwindcss";
+
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --background: hsl(260 30% 98%);
+  --foreground: hsl(260 40% 10%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(260 40% 10%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(260 40% 10%);
+  --primary: hsl(265 80% 55%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(260 20% 90%);
+  --secondary-foreground: hsl(260 40% 10%);
+  --muted: hsl(260 10% 94%);
+  --muted-foreground: hsl(260 10% 45%);
+  --accent: hsl(265 80% 94%);
+  --accent-foreground: hsl(265 80% 40%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(260 15% 90%);
+  --input: hsl(260 15% 90%);
+  --ring: hsl(265 80% 55%);
+  --radius: 0.75rem;
+  
+  --chart-1: hsl(12 76% 61%);
+  --chart-2: hsl(173 58% 39%);
+  --chart-3: hsl(197 37% 24%);
+  --chart-4: hsl(43 74% 66%);
+  --chart-5: hsl(27 87% 67%);
+  
+  --sidebar: hsl(0 0% 100%);
+  --sidebar-foreground: hsl(260 40% 30%);
+  --sidebar-primary: hsl(265 80% 55%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(260 20% 96%);
+  --sidebar-accent-foreground: hsl(260 40% 10%);
+  --sidebar-border: hsl(260 15% 92%);
+  --sidebar-ring: hsl(265 80% 55%);
+}
+
+.dark {
+  --background: hsl(218 15% 10%);
+  --foreground: hsl(215 10% 92%);
+  --card: hsl(218 15% 17%);
+  --card-foreground: hsl(215 10% 92%);
+  --popover: hsl(218 15% 17%);
+  --popover-foreground: hsl(215 10% 92%);
+  --primary: hsl(265 60% 60%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(218 15% 21%);
+  --secondary-foreground: hsl(215 10% 92%);
+  --muted: hsl(218 15% 21%);
+  --muted-foreground: hsl(215 10% 68%);
+  --accent: hsl(218 15% 21%);
+  --accent-foreground: hsl(215 10% 92%);
+  --destructive: hsl(0 50% 50%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(218 15% 26%);
+  --input: hsl(218 15% 26%);
+  --ring: hsl(265 60% 60%);
+  
+  --chart-1: hsl(215 60% 50%);
+  --chart-2: hsl(160 50% 40%);
+  --chart-3: hsl(30 60% 50%);
+  --chart-4: hsl(280 55% 55%);
+  --chart-5: hsl(340 65% 50%);
+  
+  --sidebar: hsl(218 15% 11%);
+  --sidebar-foreground: hsl(215 10% 85%);
+  --sidebar-primary: hsl(265 60% 60%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(218 15% 19%);
+  --sidebar-accent-foreground: hsl(215 10% 92%);
+  --sidebar-border: hsl(218 15% 23%);
+  --sidebar-ring: hsl(265 60% 60%);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  }
+}
+
+/* Admin-specific theme classes - Enhanced Light Mode */
+.theme-light {
+  --background: #FAFBFC;
+  --foreground: #1A1A1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  --primary: #6366F1;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F8F9FA;
+  --secondary-foreground: #475569;
+  --muted: #F8F9FA;
+  --muted-foreground: #6B7280;
+  --accent: #E0E2E8;
+  --accent-foreground: #374151;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #6366F1;
+  --sidebar: #FAFBFC;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #6366F1;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F8F9FA;
+  --sidebar-accent-foreground: #475569;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #6366F1;
+}
+
+/* Force light mode for admin area with enhanced styling */
+.admin-area {
+  --background: #FAFBFC !important;
+  --foreground: #1A1A1A !important;
+  --card: #FFFFFF !important;
+  --card-foreground: #1A1A1A !important;
+  --popover: #FFFFFF !important;
+  --popover-foreground: #1A1A1A !important;
+  --primary: #6366F1 !important;
+  --primary-foreground: #FFFFFF !important;
+  --secondary: #F8F9FA !important;
+  --secondary-foreground: #475569 !important;
+  --muted: #F8F9FA !important;
+  --muted-foreground: #6B7280 !important;
+  --accent: #E0E2E8 !important;
+  --accent-foreground: #374151 !important;
+  --destructive: #EF4444 !important;
+  --destructive-foreground: #FFFFFF !important;
+  --border: #E5E7EB !important;
+  --input: #E5E7EB !important;
+  --ring: #6366F1 !important;
+  --sidebar: #FAFBFC !important;
+  --sidebar-foreground: #1A1A1A !important;
+  --sidebar-primary: #6366F1 !important;
+  --sidebar-primary-foreground: #FFFFFF !important;
+  --sidebar-accent: #F8F9FA !important;
+  --sidebar-accent-foreground: #475569 !important;
+  --sidebar-border: #E5E7EB !important;
+  --sidebar-ring: #6366F1 !important;
+}
+
+/* Enhanced admin card styling with modern design */
+.admin-area .bg-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease-in-out;
+}
+
+.admin-area .bg-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.admin-area .bg-card:active {
+  box-shadow: 0 2px 4px -2px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  transform: translateY(0);
+}
+
+/* Enhanced admin text contrast */
+.admin-area .text-foreground {
+  color: var(--foreground);
+}
+
+.admin-area .text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+/* Enhanced button styling */
+.admin-area button {
+  transition: all 0.2s ease-in-out;
+}
+
+.admin-area button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.12);
+}
+
+.admin-area button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Enhanced input styling */
+.admin-area input {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid var(--border);
+}
+
+.admin-area input:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Enhanced sidebar styling */
+.admin-area aside {
+  background: linear-gradient(to bottom, #FAFBFC, #F5F5F5);
+  border-right: 1px solid var(--border);
+}
+
+/* Enhanced header styling */
+.admin-area header {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Enhanced main content area */
+.admin-area main {
+  background: linear-gradient(to bottom, #FAFBFC, #F8F9FA);
+}
+
+/* Enhanced section dividers */
+.admin-area .border-t {
+  border-color: var(--border);
+}
+
+/* Enhanced hover states for navigation */
+.admin-area .text-foreground:hover {
+  color: var(--primary);
+}
+
+.admin-area .bg-accent {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.admin-area .text-accent-foreground {
+  color: var(--accent-foreground);
+}
+
+/* Enhanced focus states */
+.admin-area *:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Admin-specific font size scaling */
+.font-sm {
+  --font-scale: 0.95;
+}
+
+.font-md {
+  --font-scale: 1;
+}
+
+.font-lg {
+  --font-scale: 1.07;
+}
+
+.font-xl {
+  --font-scale: 1.15;
+}
+
+/* Apply font scale to admin area only */
+.admin-area {
+  font-size: calc(16px * var(--font-scale, 1));
+}

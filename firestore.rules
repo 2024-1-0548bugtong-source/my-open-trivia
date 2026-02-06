@@ -1,0 +1,83 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Quiz Results Collection
+    match /quizResults/{documentId} {
+      // Public read: Only visible entries (hidden != true)
+      allow read: if resource.data.hidden != true;
+      
+      // Create: Users can create their own entries
+      allow create: if isAuthenticated() 
+        && request.auth.uid == resource.data.uid
+        && resource.data.keys().hasAll(['uid', 'nicknameSnapshot', 'categoryId', 'categoryName', 'score', 'totalQuestions', 'accuracy', 'createdAt', 'hidden'])
+        && resource.data.uid == request.auth.uid
+        && resource.data.hidden == false
+        && resource.data.score is int
+        && resource.data.totalQuestions is int
+        && resource.data.accuracy is number;
+      
+      // Update: Users can only update 'hidden' field for their own entries
+      allow update: if isAuthenticated()
+        && isOwner(resource.data.uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hidden'])
+        && request.resource.data.hidden is bool;
+      
+      // Delete: No client deletions allowed
+      allow delete: if false;
+    }
+
+    // Daily Stats Collection (Admin Read-Only)
+    match /statsDaily/{dateId} {
+      // Admin read-only
+      allow read: if isAdmin();
+      
+      // No client writes (server only via Cloud Functions)
+      allow write, create, update, delete: if false;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Self read/write only
+      allow read, write: if isOwner(userId);
+      
+      // No admin writes from client (use Cloud Functions)
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // Admin Audit Collection (Admin Read-Only)
+    match /adminAudit/{auditId} {
+      // Admin read-only
+      allow read: if isAdmin();
+      
+      // No client writes (server only via Cloud Functions)
+      allow write, create, update, delete: if false;
+    }
+
+    // Categories Collection (Public read for admin dashboard)
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write, create, update, delete: if false;
+    }
+
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

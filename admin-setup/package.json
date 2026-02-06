@@ -1,0 +1,20 @@
+{
+  "name": "admin-setup",
+  "version": "1.0.0",
+  "description": "One-time Firebase Admin setup for custom claims",
+  "type": "module",
+  "main": "setAdmin.js",
+  "scripts": {
+    "set-admin": "node setAdmin.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  },
+  "keywords": [
+    "firebase",
+    "admin",
+    "custom-claims"
+  ],
+  "author": "",
+  "license": "ISC"
+}
